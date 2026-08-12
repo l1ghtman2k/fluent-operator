@@ -25,7 +25,15 @@ on:
 env:
   GHCR_REPO: 'ghcr.io/${{ github.repository }}/fluent-operator'
   DOCKERHUB_REPO: 'kubesphere/fluent-operator'
-  HAS_DOCKERHUB: ${{ secrets.REGISTRY_USER != '' }}
+  # FORK-ONLY: hard-disabled. This fork has REGISTRY_USER/REGISTRY_PASSWORD set,
+  # which makes the upstream expression evaluate true and the build then tries to
+  # push to DOCKERHUB_REPO 'kubesphere/fluent-operator' -- a repo these credentials
+  # cannot write to, so every build fails with:
+  #   failed to push kubesphere/fluent-operator: push access denied ... insufficient_scope
+  # We only want the GHCR image (ghcr.io/l1ghtman2k/fluent-operator/fluent-operator).
+  # DO NOT include this change in the upstream PR for issue #1436 -- it is specific to
+  # this fork and would break image publishing for the fluent/fluent-operator project.
+  HAS_DOCKERHUB: false
 
 permissions:
   contents: read
