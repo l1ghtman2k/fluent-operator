@@ -200,7 +200,16 @@ jobs:
         uses: int128/docker-manifest-create-action@b60433fd4312d7a64a56d769b76ebe3f45cf36b4 # v2.1.0
         with:
           push: true
-          tags: ${{ needs.build.outputs.tags }} # Includes GHCR and Docker Hub
+          # FORK-ONLY: upstream passes the tag list through a job output, but this
+          # fork has REGISTRY_USER set to the same string that appears inside the
+          # image name (ghcr.io/l1ghtman2k/...). GitHub therefore treats the output
+          # as containing a secret and drops it:
+          #   ##[warning]Skip output 'tags' since it may contain secret
+          # which reaches this step as an empty value -> "AssertionError: tags must
+          # be set". Computing the tags here avoids the job-output masking entirely.
+          # DO NOT include in the upstream PR for issue #1436.
+          tags: |
+            ${{ env.GHCR_REPO }}:${{ inputs.tag || github.sha }}
           sources: |
             ${{ env.GHCR_REPO }}@${{ needs.build.outputs.digest_amd64 }}
             ${{ env.GHCR_REPO }}@${{ needs.build.outputs.digest_arm64 }}
